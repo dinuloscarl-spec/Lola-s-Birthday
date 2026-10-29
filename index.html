@@ -200,7 +200,7 @@ html{scroll-padding-top:calc(58px + env(safe-area-inset-top,0px))}
   </form>
   <div class="ws" id="ws" style="text-align:left"></div>
   <p><button class="btn o" id="cp">Kopyahin ang lahat ng mensahe</button></p>
-  <p class="note" style="margin-top:20px">Ang mga mensahe ay nakatago sa device na ito.</p>
+  <p class="note" id="nt" style="margin-top:20px">Ang mga mensahe ay nakatago sa device na ito.</p>
 </section>
 
 <footer>
@@ -213,7 +213,7 @@ html{scroll-padding-top:calc(58px + env(safe-area-inset-top,0px))}
 <canvas id="cf"></canvas>
 
 <script>
-const CONFIG={name:'Lola Sisang',from:'CJ',age:null,bday:null /* 'MM-DD' */};
+const CONFIG={name:'Lola Sisang',from:'CJ',age:null,bday:null /* 'MM-DD' */,formspree:'' /* i-paste dito ang Formspree URL, hal. 'https://formspree.io/f/xxxxxxxx' */};
 const IMG={1:'1.jpg',2:'2.jpg',3:'3.jpg',4:'4.jpg',6:'6.jpg',7:'7.jpg',8:'8.jpg',9:'9.jpg',10:'10.jpg',11:'11.jpg',12:'12.jpg',13:'13.jpg',14:'14.jpg',15:'15.jpg'};
 const PICS=[[12,'Sa gitna ng handaan'],[7,'Magkasama sa hapunan'],[9,'Tatlong henerasyon'],[10,'Sama-samang ngiti'],[6,'Mga ngiting buong-puso'],[4,'Sa may patio'],[3,'Kwentuhan at tawanan'],[13,'Pasko kasama ang pamilya'],[14,'Sabay-sabay na kainan'],[15,'Pizza night'],[2,'Sa araw ng pagtatapos'],[1,'Bago ang seremonya'],[11,'Sa hardin'],[8,'Magkaakbay']];
 const LETTER=['Lola,','Hindi ako magaling magsabi ng ganito nang harapan, kaya dito ko na lang isinulat. Salamat po sa lahat ng luto, sa mga paalala, at sa pagiging laging nandiyan para sa amin.','Ang mesa ninyo, laging puno. Hindi lang ng pagkain, kundi ng kwentuhan at tawanan. Sa bawat tagumpay namin, pakiramdam ko kayo rin ang may gawa.','Sana po humaba pa ang mga taon ninyo, malakas, masaya, at napapaligiran ng pamilya. Maligayang kaarawan po, Lola. Mahal na mahal ka namin.'];
@@ -262,9 +262,14 @@ try{W=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){}
 const esc=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function draw(){$('#ws').innerHTML=W.map((w,i)=>'<div class="w">“'+esc(w.t)+'”<b>— '+esc(w.n)+'<button data-d="'+i+'" aria-label="Burahin" style="float:right;border:0;background:none;color:var(--mute);cursor:pointer">×</button></b></div>').join('')}
 draw();
-$('#wf').addEventListener('submit',e=>{e.preventDefault();W.unshift({n:$('#wn').value.trim(),t:$('#wt').value.trim()});
-try{localStorage.setItem(KEY,JSON.stringify(W))}catch(x){}
-draw();e.target.reset();burst()});
+$('#wf').addEventListener('submit',async e=>{e.preventDefault();const f=e.target,n=$('#wn').value.trim(),t=$('#wt').value.trim(),b=f.querySelector('button');
+if(CONFIG.formspree){b.disabled=true;b.textContent='Ipinapadala…';
+try{const r=await fetch(CONFIG.formspree,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({name:n,message:t})});if(!r.ok)throw 0}
+catch(x){b.disabled=false;b.textContent='Ipadala ang pagbati';alert('Hindi naipadala. Subukan ulit.');return}
+b.disabled=false;b.textContent='Ipadala ang pagbati'}
+W.unshift({n,t});try{localStorage.setItem(KEY,JSON.stringify(W))}catch(x){}
+draw();f.reset();burst()});
+if(CONFIG.formspree)$('#nt').textContent='Ipinapadala ang bawat mensahe kay '+CONFIG.from+' para mabasa ni Lola.';
 // share
 $('#sh').onclick=async()=>{const u=location.href,t='Maligayang Kaarawan, '+CONFIG.name+'!';
 try{if(navigator.share){await navigator.share({title:t,url:u})}else{await navigator.clipboard.writeText(u);$('#sh').textContent='Nakopya na!';setTimeout(()=>$('#sh').textContent='Ibahagi',1800)}}catch(e){}};
